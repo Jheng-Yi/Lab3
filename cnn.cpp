@@ -509,6 +509,8 @@ string ToString(int sel){
                 return ".dn.body";
             case 1:
                 return ".conv.0.body";
+            default:
+                return "";
         }
     }else{
         return ".body";
