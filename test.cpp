@@ -170,39 +170,6 @@ int main(){
 	int j = 1;
 	#endif
 
-	for(int cnt=0;cnt<9;cnt++){
-		//RGB
-		para_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
-		run_m_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_mean";
-		run_v_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_var";
-		bn_w = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.weight";
-		bn_b = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.bias";
-
-		kernel = get_kernel(para_rgb);
-		statistic = get_stat(run_m_rgb, run_v_rgb);
-		bn = get_bn(bn_w, bn_b);
-		cout << cnt+1 << "conv" << endl;
-		test_RGB.conv(kernel, statistic, bn, 1);
-		test_RGB.maxpooling(2, 2);
-
-		//Depth
-		para_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
-		run_m_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_mean";
-		run_v_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_var";
-		bn_w = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.weight";
-		bn_b = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.bias";
-
-		kernel = get_kernel(para_depth);
-		statistic = get_stat(run_m_depth, run_v_depth);
-		bn = get_bn(bn_w, bn_b);
-		cout << cnt+1 << "conv" << endl;
-		test_Depth.conv(kernel, statistic, bn, 1);
-		test_Depth.maxpooling(2, 2);
-	}
-
-	test_RGB.avgpooling();
-	test_Depth.avgpooling();
-/*
 	for(int cnt=0; cnt<5;cnt++){
 		if(cnt == 0){
 			para_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".body.conv.weight";
@@ -306,7 +273,7 @@ int main(){
 			}
 		}
 	}
-*/
+
 	fc_w = get_fc_weight("./data_32bit/classifier_concat.weight");
 	fc_b = get_fc_bias("./data_32bit/classifier_concat.bias");
 	fc_type result;
