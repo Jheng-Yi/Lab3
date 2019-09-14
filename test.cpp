@@ -210,7 +210,6 @@ int main(){
 	fc_w = get_fc_weight("./data_32bit/classifier_concat.weight");
 	fc_b = get_fc_bias("./data_32bit/classifier_concat.bias");
 	fc_type result;
-	//result = full_connected(test_RGB.get_channel(), test_Depth.get_channel(), "./data_32bit/classifier_concat.weight", "./data_32bit/classifier_concat.bias", 24);
 	result = fc(test_RGB.get_channel(), test_Depth.get_channel(), get_fc_weight("./data_32bit/classifier_concat.weight"), get_fc_bias("./data_32bit/classifier_concat.bias"));
 
 	int ans = 0;
