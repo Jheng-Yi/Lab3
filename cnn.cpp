@@ -150,7 +150,7 @@ void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[ou
     cout << endl;*/
 }
 #elif (quantize == 0)
-void cnn::conv(kernel_type kernel, statistic_type statistic, bn_type bn, int stride){     // kernel[output_channel][input_channel][row][col]
+void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
     channel = resize(size, kernel.output_size);
@@ -165,7 +165,7 @@ void cnn::conv(kernel_type kernel, statistic_type statistic, bn_type bn, int str
                         }
                     }
                 }
-                channel[ch_o][row][col] = ((channel[ch_o][row][col]-statistic.running_mean[ch_o])/sqrt(statistic.running_variance[ch_o]))*bn.bn_w[ch_o]+bn.bn_b[ch_o];
+                channel[ch_o][row][col] = ((channel[ch_o][row][col]-running_mean.bias[ch_o])/sqrt(running_var.bias[ch_o]))*bn_w.bias[ch_o]+bn_b.bias[ch_o];
             }
         }
     }
@@ -334,79 +334,6 @@ bias_type get_bias(string bias_file){
     fin.close();
     return bias;
 }
-
-#if (quantize == 0)
-statistic_type get_stat(string run_m, string run_v){
-    string data;
-    ifstream fin1(run_m);
-    statistic_type statistics;
-    
-    int size;
-    getline(fin1, data);
-    sscanf(data.c_str(), "# torch.Size([%d])", &size);
-    statistics.size = size;
-    
-    statistics.running_mean.resize(size);
-    for(int i=0;i<size;i++){
-        getline(fin1, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        statistics.running_mean[i] = temp;
-    }
-    fin1.close();
-
-    ifstream fin2(run_v);
-    getline(fin2, data);
-    statistics.running_variance.resize(size);
-    for(int i=0;i<size;i++){
-        getline(fin2, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        statistics.running_variance[i] = temp;
-    }
-    fin2.close();
-
-    return statistics;
-}
-
-bn_type get_bn(string weight, string bias){
-    string data;
-    ifstream fin1(weight);
-    bn_type bn;
-    int size;
-
-    getline(fin1, data);
-    sscanf(data.c_str(), "# torch.Size([%d])", &size);
-    bn.size = size;
-
-    bn.bn_w.resize(size);
-    bn.bn_b.resize(size);
-
-    for(int i=0;i<size;i++){
-        getline(fin1, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        bn.bn_w[i] = temp;
-    }
-    fin1.close();
-
-    ifstream fin2(bias);
-    getline(fin2, data);
-    for(int i=0;i<size;i++){
-        getline(fin2, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        bn.bn_b[i] = temp;
-    }
-    fin2.close();
-
-    return bn;
-}
-#endif
 
 void cnn::t(int s){
 	for(int i=0;i<s;i++){

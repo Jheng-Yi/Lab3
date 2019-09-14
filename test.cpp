@@ -149,8 +149,11 @@ int main(){
 	test_Depth.r_img(filename_depth, "Depth");
 
 	kernel_type kernel;
-	statistic_type statistic;
-	bn_type bn;
+	bias_type running_mean;
+	bias_type running_var;
+	bias_type bn_weight;
+	bias_type bn_bias;
+
 	//RGB
 	string para_rgb;
 	string run_m_rgb;
@@ -179,10 +182,12 @@ int main(){
 		bn_b = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.bias";
 
 		kernel = get_kernel(para_rgb);
-		statistic = get_stat(run_m_rgb, run_v_rgb);
-		bn = get_bn(bn_w, bn_b);
+		running_mean = get_bias(run_m_rgb);
+		running_var = get_bias(run_v_rgb);
+		bn_weight = get_bias(bn_w);
+		bn_bias = get_bias(bn_b);
 		cout << cnt+1 << " conv" << endl;
-		test_RGB.conv(kernel, statistic, bn, 1);
+		test_RGB.conv(kernel, running_mean, running_var, bn_weight, bn_bias, 1);
 		if(cnt % 2 == 0){
 			test_RGB.maxpooling(2, 2);
 		}
@@ -195,10 +200,12 @@ int main(){
 		bn_b = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.bias";
 
 		kernel = get_kernel(para_depth);
-		statistic = get_stat(run_m_depth, run_v_depth);
-		bn = get_bn(bn_w, bn_b);
+		running_mean = get_bias(run_m_depth);
+		running_var = get_bias(run_v_depth);
+		bn_weight = get_bias(bn_w);
+		bn_bias = get_bias(bn_b);
 		cout << cnt+1 << "conv" << endl;
-		test_Depth.conv(kernel, statistic, bn, 1);
+		test_Depth.conv(kernel, running_mean, running_var, bn_weight, bn_bias, 1);
 		if(cnt % 2 == 0){
 			test_Depth.maxpooling(2, 2);
 		}
