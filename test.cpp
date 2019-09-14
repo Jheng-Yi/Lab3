@@ -2,7 +2,7 @@
 #include <string.h>
 #include <time.h>
 
-//testing
+
 int main(){
 	clock_t start, end;
 	start = clock();
