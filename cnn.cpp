@@ -63,9 +63,6 @@ void cnn::r_img(string filename, string im_type){
                 rgbPixel = image.at<Vec3b>(i, j);//BGR
                 for(int ch=0;ch<3;ch++){
                     channel[ch][i][j] = rgbPixel.val[2-ch]/256.0;
-                    /*if(channel[ch][i][j] > 127.0)
-                        channel[ch][i][j] = 127.0;
-                    channel[ch][i][j] = (channel[ch][i][j]/128.0) - 0.5;*/
                 }
             }
         }
@@ -91,9 +88,6 @@ void cnn::r_img(string filename, string im_type){
                 uchar depthPixel;
                 depthPixel = image.at<uchar>(i,j);
                 channel[0][i][j] = depthPixel/256.0;
-                /*if(channel[0][i][j] > 127.0)
-                    channel[0][i][j] = 127.0;
-                channel[0][i][j] = (channel[0][i][j]/128.0) - 0.5;*/
             }
         }
         #if (debug)
@@ -309,6 +303,7 @@ kernel_type get_kernel(string kernel_file){
             }
         }
     }
+    fin.close();
     /*for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             cout << i << j << " " << kernel.kernel[0][1][i][j] << endl;
@@ -336,6 +331,7 @@ bias_type get_bias(string bias_file){
     }
     //cout << bias.bias[0] << endl;
     //cout << bias.size << endl;
+    fin.close();
     return bias;
 }
 
@@ -358,6 +354,7 @@ statistic_type get_stat(string run_m, string run_v){
         stream >> temp;
         statistics.running_mean[i] = temp;
     }
+    fin1.close();
 
     ifstream fin2(run_v);
     getline(fin2, data);
@@ -369,6 +366,8 @@ statistic_type get_stat(string run_m, string run_v){
         stream >> temp;
         statistics.running_variance[i] = temp;
     }
+    fin2.close();
+
     return statistics;
 }
 
@@ -392,6 +391,7 @@ bn_type get_bn(string weight, string bias){
         stream >> temp;
         bn.bn_w[i] = temp;
     }
+    fin1.close();
 
     ifstream fin2(bias);
     getline(fin2, data);
@@ -402,6 +402,8 @@ bn_type get_bn(string weight, string bias){
         stream >> temp;
         bn.bn_b[i] = temp;
     }
+    fin2.close();
+
     return bn;
 }
 #endif
@@ -443,6 +445,7 @@ fc_weight get_fc_weight(string fc_file_w){
             fc_w.weight[i][j] = temp;
         }
     }
+    fin.close();
 
     return fc_w;
 }
@@ -464,6 +467,8 @@ fc_bias get_fc_bias(string fc_file_b){
         stream >> temp;
         bias.bias[i] = temp;
     }
+    fin.close();
+
     return bias;
 }
 

@@ -8,6 +8,7 @@
 #include<cstdio>
 #include<sstream>
 #include<cmath>
+#include<tuple>
 #include<opencv2/opencv.hpp>
 using namespace std;
 using namespace cv;
@@ -36,6 +37,7 @@ typedef struct BN{
     vector<float> bn_b;
     int size;
 }bn_type;
+
 #endif
 
 typedef struct fc_W{
