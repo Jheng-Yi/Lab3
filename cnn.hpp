@@ -1,5 +1,5 @@
 #define CNN
-#define quantize 0
+#define quantize 1
 #define debug 0
 #include<iostream>
 #include<fstream>

@@ -2,9 +2,9 @@
 
 cnn::cnn():channel(0), size(256), channel_num(3){}
 cnn::~cnn(){}
-#if (quantize == 1)
+#if (quantize == 0)
 void cnn::r_img(string filename, string im_type){
-    Mat image;
+    Mat image, resized_image;
     if(im_type == "RGB"){
         image = imread(filename, IMREAD_COLOR);
         if(image.empty()){   // Check for invalid input
@@ -12,10 +12,19 @@ void cnn::r_img(string filename, string im_type){
             exit(-1);
         }
         channel = cnn::resize(size, channel_num);
-        for(int i=0;i<image.rows;i++){
-            for(int j=0;j<image.cols;j++){
+        if(image.rows > image.cols){
+            float x = 256/image.rows;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+        }else{
+            float x = 256/image.cols;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+        }
+        for(int i=0;i<resized_image.rows;i++){
+            for(int j=0;j<resized_image.cols;j++){
                 Vec3b rgbPixel;
-                rgbPixel = image.at<Vec3b>(i, j);//BGR
+                rgbPixel = resized_image.at<Vec3b>(i, j);//BGR
                 for(int ch=0;ch<3;ch++){
                     channel[ch][i][j] = rgbPixel.val[2-ch];
                     if(channel[ch][i][j] > 127.0)
@@ -32,10 +41,19 @@ void cnn::r_img(string filename, string im_type){
         }
         channel_num = 1;
         channel = cnn::resize(size, channel_num);
-        for(int i=0;i<image.rows;i++){
-            for(int j=0;j<image.cols;j++){
+        if(image.rows > image.cols){
+            float x = 256/image.rows;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+        }else{
+            float x = 256/image.cols;
+            int d = int(image.rows*x);
+            cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+        }
+        for(int i=0;i<resized_image.rows;i++){
+            for(int j=0;j<resized_image.cols;j++){
                 uchar depthPixel;
-                depthPixel = image.at<uchar>(i,j);
+                depthPixel = resized_image.at<uchar>(i,j);
                 channel[0][i][j] = depthPixel;
                 if(channel[0][i][j] > 127.0)
                     channel[0][i][j] = 127.0;
@@ -47,7 +65,7 @@ void cnn::r_img(string filename, string im_type){
     //cout << channel[0].size() << endl;
     //cout << channel[0][0].size() << endl;
 }
-#elif (quantize == 0)
+#elif (quantize == 1)
 
 void cnn::r_img(string filename, string im_type){
     Mat image, resized_image;
@@ -455,6 +473,7 @@ fc_type full_connected(image_type rgb, image_type depth, string weight_file_name
     return result;
 }
 
+
 string ToString(int sel){
     if(sel){
         switch(sel % 2){
@@ -469,3 +488,19 @@ string ToString(int sel){
         return ".body";
     }
 }
+// #else
+// string ToString(int sel){
+//     if(sel){
+//         switch(sel % 2){
+//             case 0:
+//                 return ".conv.0.body";
+//             case 1:
+//                 return ".conv.0.body";
+//             default:
+//                 return "";
+//         }
+//     }else{
+//         return ".body";
+//     }
+// }
+// #endif
