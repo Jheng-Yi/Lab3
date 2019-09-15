@@ -140,8 +140,8 @@ int main(){
 	return 0;
 
 	#elif (quantize == 0)
-	string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/11/P1_G012_0003_r.jpg";
-	string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/11/P1_G012_0003_r.jpg";
+	string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/08/P1_G08_0004.jpg";
+	string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/08/P1_G08_0004.jpg";
 	cnn test_RGB = cnn();
 	cnn test_Depth = cnn();
 
@@ -149,8 +149,11 @@ int main(){
 	test_Depth.r_img(filename_depth, "Depth");
 
 	kernel_type kernel;
-	statistic_type statistic;
-	bn_type bn;
+	bias_type running_mean;
+	bias_type running_var;
+	bias_type bn_weight;
+	bias_type bn_bias;
+
 	//RGB
 	string para_rgb;
 	string run_m_rgb;
@@ -170,114 +173,49 @@ int main(){
 	int j = 1;
 	#endif
 
-	for(int cnt=0; cnt<5;cnt++){
-		if(cnt == 0){
-			para_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".body.conv.weight";
-			kernel = get_kernel(para_rgb);
-			run_m_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".body.bn.running_mean";
-			run_v_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".body.bn.running_var";
-			bn_w = "./data_32bit/rgb_feature."+to_string(cnt)+".body.bn.weight";
-			bn_b = "./data_32bit/rgb_feature."+to_string(cnt)+".body.bn.bias";
-			//cout << cnt << " " << para_rgb << "\n" << run_m_rgb << "\n" << run_v_rgb << "\n" << bn_w << "\n" << bn_b << endl;
-			statistic = get_stat(run_m_rgb, run_v_rgb);
-			bn = get_bn(bn_w, bn_b);
-			#if (debug)
-			cout << i++ << " rgb conv" << endl;
-			#endif
-			test_RGB.conv(kernel, statistic, bn, 1);
+	for(int cnt=0;cnt<9;cnt++){
+		//RGB
+		para_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
+		run_m_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_mean";
+		run_v_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_var";
+		bn_w = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.weight";
+		bn_b = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.bias";
+
+		kernel = get_kernel(para_rgb);
+		running_mean = get_bias(run_m_rgb);
+		running_var = get_bias(run_v_rgb);
+		bn_weight = get_bias(bn_w);
+		bn_bias = get_bias(bn_b);
+		cout << cnt+1 << " conv" << endl;
+		test_RGB.conv(kernel, running_mean, running_var, bn_weight, bn_bias, 1);
+		if(cnt % 2 == 0){
 			test_RGB.maxpooling(2, 2);
 		}
-		else{
-			para_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".conv.0.body.conv.weight";
-			kernel = get_kernel(para_rgb);
-			run_m_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".conv.0.body.bn.running_mean";
-			run_v_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".conv.0.body.bn.running_var";
-			bn_w = "./data_32bit/rgb_feature."+to_string(cnt)+".conv.0.body.bn.weight";
-			bn_b = "./data_32bit/rgb_feature."+to_string(cnt)+".conv.0.body.bn.bias";
-			//cout << cnt << " " << para_rgb << "\n" << run_m_rgb << "\n" << run_v_rgb << "\n" << bn_w << "\n" << bn_b << endl;
-			statistic = get_stat(run_m_rgb, run_v_rgb);
-			bn = get_bn(bn_w, bn_b);
-			#if (debug)
-			cout << i++ << " rgb conv" << endl;
-			#endif
-			test_RGB.conv(kernel, statistic, bn, 1);
 
-			para_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".dn.body.conv.weight";
-			kernel = get_kernel(para_rgb);
-			run_m_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".dn.body.bn.running_mean";
-			run_v_rgb = "./data_32bit/rgb_feature."+to_string(cnt)+".dn.body.bn.running_var";
-			bn_w = "./data_32bit/rgb_feature."+to_string(cnt)+".dn.body.bn.weight";
-			bn_b = "./data_32bit/rgb_feature."+to_string(cnt)+".dn.body.bn.bias";
-			//cout << cnt << " " << para_rgb << "\n" << run_m_rgb << "\n" << run_v_rgb << "\n" << bn_w << "\n" << bn_b << endl;
-			statistic = get_stat(run_m_rgb, run_v_rgb);
-			bn = get_bn(bn_w, bn_b);
-			#if (debug)
-			cout << i++ << " rgb conv" << endl;
-			#endif
-			test_RGB.conv(kernel, statistic, bn, 1);
-			test_RGB.maxpooling(2, 2);
-			if(cnt == 4){
-				test_RGB.avgpooling();
-			}
+		//Depth
+		para_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
+		run_m_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_mean";
+		run_v_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_var";
+		bn_w = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.weight";
+		bn_b = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.bias";
+
+		kernel = get_kernel(para_depth);
+		running_mean = get_bias(run_m_depth);
+		running_var = get_bias(run_v_depth);
+		bn_weight = get_bias(bn_w);
+		bn_bias = get_bias(bn_b);
+		test_Depth.conv(kernel, running_mean, running_var, bn_weight, bn_bias, 1);
+		if(cnt % 2 == 0){
+			test_Depth.maxpooling(2, 2);
 		}
 	}
 
-	for(int cnt=0; cnt<5;cnt++){
-		if(cnt == 0){
-			para_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".body.conv.weight";
-			kernel = get_kernel(para_rgb);
-			run_m_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".body.bn.running_mean";
-			run_v_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".body.bn.running_var";
-			bn_w = "./data_32bit/depth_feature."+to_string(cnt)+".body.bn.weight";
-			bn_b = "./data_32bit/depth_feature."+to_string(cnt)+".body.bn.bias";
-			//cout << cnt << " " << para_rgb << "\n" << run_m_rgb << "\n" << run_v_rgb << "\n" << bn_w << "\n" << bn_b << endl;
-			statistic = get_stat(run_m_rgb, run_v_rgb);
-			bn = get_bn(bn_w, bn_b);
-			#if (debug)
-			cout << j++ << " depth conv" << endl;
-			#endif
-			test_Depth.conv(kernel, statistic, bn, 1);
-			test_Depth.maxpooling(2, 2);
-		}
-		else{
-			para_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".conv.0.body.conv.weight";
-			kernel = get_kernel(para_rgb);
-			run_m_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".conv.0.body.bn.running_mean";
-			run_v_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".conv.0.body.bn.running_var";
-			bn_w = "./data_32bit/depth_feature."+to_string(cnt)+".conv.0.body.bn.weight";
-			bn_b = "./data_32bit/depth_feature."+to_string(cnt)+".conv.0.body.bn.bias";
-			//cout << cnt << " " << para_rgb << "\n" << run_m_rgb << "\n" << run_v_rgb << "\n" << bn_w << "\n" << bn_b << endl;
-			statistic = get_stat(run_m_rgb, run_v_rgb);
-			bn = get_bn(bn_w, bn_b);
-			#if (debug)
-			cout << j++ << " depth conv" << endl;
-			#endif
-			test_Depth.conv(kernel, statistic, bn, 1);
-
-			para_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".dn.body.conv.weight";
-			kernel = get_kernel(para_rgb);
-			run_m_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".dn.body.bn.running_mean";
-			run_v_rgb = "./data_32bit/depth_feature."+to_string(cnt)+".dn.body.bn.running_var";
-			bn_w = "./data_32bit/depth_feature."+to_string(cnt)+".dn.body.bn.weight";
-			bn_b = "./data_32bit/depth_feature."+to_string(cnt)+".dn.body.bn.bias";
-			//cout << cnt << " " << para_rgb << "\n" << run_m_rgb << "\n" << run_v_rgb << "\n" << bn_w << "\n" << bn_b << endl;
-			statistic = get_stat(run_m_rgb, run_v_rgb);
-			bn = get_bn(bn_w, bn_b);
-			#if (debug)
-			cout << j++ << " depth conv" << endl;
-			#endif
-			test_Depth.conv(kernel, statistic, bn, 1);
-			test_Depth.maxpooling(2, 2);
-			if(cnt == 4){
-				test_Depth.avgpooling();
-			}
-		}
-	}
+	test_RGB.avgpooling();
+	test_Depth.avgpooling();
 
 	fc_w = get_fc_weight("./data_32bit/classifier_concat.weight");
 	fc_b = get_fc_bias("./data_32bit/classifier_concat.bias");
 	fc_type result;
-	//result = full_connected(test_RGB.get_channel(), test_Depth.get_channel(), "./data_32bit/classifier_concat.weight", "./data_32bit/classifier_concat.bias", 24);
 	result = fc(test_RGB.get_channel(), test_Depth.get_channel(), get_fc_weight("./data_32bit/classifier_concat.weight"), get_fc_bias("./data_32bit/classifier_concat.bias"));
 
 	int ans = 0;

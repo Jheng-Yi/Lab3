@@ -48,8 +48,9 @@ void cnn::r_img(string filename, string im_type){
     //cout << channel[0][0].size() << endl;
 }
 #elif (quantize == 0)
+
 void cnn::r_img(string filename, string im_type){
-    Mat image;
+    Mat image, resized_image;
     if(im_type == "RGB"){
         image = imread(filename, IMREAD_COLOR);
         if(image.empty()){   // Check for invalid input
@@ -57,21 +58,29 @@ void cnn::r_img(string filename, string im_type){
             exit(-1);
         }
         channel = cnn::resize(size, channel_num);
-        for(int i=0;i<image.rows;i++){
-            for(int j=0;j<image.cols;j++){
+        if(image.rows > image.cols){
+            float x = 256/image.rows;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+        }else{
+            float x = 256/image.cols;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+        }
+
+        for(int i=0;i<resized_image.rows;i++){
+            for(int j=0;j<resized_image.cols;j++){
                 Vec3b rgbPixel;
-                rgbPixel = image.at<Vec3b>(i, j);//BGR
+                rgbPixel = resized_image.at<Vec3b>(i, j);//BGR
                 for(int ch=0;ch<3;ch++){
                     channel[ch][i][j] = rgbPixel.val[2-ch]/256.0;
-                    /*if(channel[ch][i][j] > 127.0)
-                        channel[ch][i][j] = 127.0;
-                    channel[ch][i][j] = (channel[ch][i][j]/128.0) - 0.5;*/
                 }
             }
         }
+        
         #if (debug)
-        for(int i=0;i<image.rows;i++){
-            for(int j=0;j<image.cols;j++){
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
                 for(int ch=0;ch<3;ch++){
                     channel[ch][i][j] = 1.0;
                 }
@@ -86,19 +95,25 @@ void cnn::r_img(string filename, string im_type){
         }
         channel_num = 1;
         channel = cnn::resize(size, channel_num);
-        for(int i=0;i<image.rows;i++){
-            for(int j=0;j<image.cols;j++){
+        if(image.rows > image.cols){
+            float x = 256/image.rows;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+        }else{
+            float x = 256/image.cols;
+            int d = int(image.rows*x);
+            cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+        }
+        for(int i=0;i<resized_image.rows;i++){
+            for(int j=0;j<resized_image.cols;j++){
                 uchar depthPixel;
-                depthPixel = image.at<uchar>(i,j);
+                depthPixel = resized_image.at<uchar>(i,j);
                 channel[0][i][j] = depthPixel/256.0;
-                /*if(channel[0][i][j] > 127.0)
-                    channel[0][i][j] = 127.0;
-                channel[0][i][j] = (channel[0][i][j]/128.0) - 0.5;*/
             }
         }
         #if (debug)
-        for(int i=0;i<image.rows;i++){
-            for(int j=0;j<image.cols;j++){
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
                 channel[0][i][j] = 1.0;
             }
         }
@@ -156,7 +171,7 @@ void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[ou
     cout << endl;*/
 }
 #elif (quantize == 0)
-void cnn::conv(kernel_type kernel, statistic_type statistic, bn_type bn, int stride){     // kernel[output_channel][input_channel][row][col]
+void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
     channel = resize(size, kernel.output_size);
@@ -171,7 +186,7 @@ void cnn::conv(kernel_type kernel, statistic_type statistic, bn_type bn, int str
                         }
                     }
                 }
-                channel[ch_o][row][col] = ((channel[ch_o][row][col]-statistic.running_mean[ch_o])/sqrt(statistic.running_variance[ch_o]))*bn.bn_w[ch_o]+bn.bn_b[ch_o];
+                channel[ch_o][row][col] = ((channel[ch_o][row][col]-running_mean.bias[ch_o])/sqrt(running_var.bias[ch_o]))*bn_w.bias[ch_o]+bn_b.bias[ch_o];
             }
         }
     }
@@ -309,6 +324,7 @@ kernel_type get_kernel(string kernel_file){
             }
         }
     }
+    fin.close();
     /*for(int i=0;i<3;i++){
         for(int j=0;j<3;j++){
             cout << i << j << " " << kernel.kernel[0][1][i][j] << endl;
@@ -336,75 +352,9 @@ bias_type get_bias(string bias_file){
     }
     //cout << bias.bias[0] << endl;
     //cout << bias.size << endl;
+    fin.close();
     return bias;
 }
-
-#if (quantize == 0)
-statistic_type get_stat(string run_m, string run_v){
-    string data;
-    ifstream fin1(run_m);
-    statistic_type statistics;
-    
-    int size;
-    getline(fin1, data);
-    sscanf(data.c_str(), "# torch.Size([%d])", &size);
-    statistics.size = size;
-    
-    statistics.running_mean.resize(size);
-    for(int i=0;i<size;i++){
-        getline(fin1, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        statistics.running_mean[i] = temp;
-    }
-
-    ifstream fin2(run_v);
-    getline(fin2, data);
-    statistics.running_variance.resize(size);
-    for(int i=0;i<size;i++){
-        getline(fin2, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        statistics.running_variance[i] = temp;
-    }
-    return statistics;
-}
-
-bn_type get_bn(string weight, string bias){
-    string data;
-    ifstream fin1(weight);
-    bn_type bn;
-    int size;
-
-    getline(fin1, data);
-    sscanf(data.c_str(), "# torch.Size([%d])", &size);
-    bn.size = size;
-
-    bn.bn_w.resize(size);
-    bn.bn_b.resize(size);
-
-    for(int i=0;i<size;i++){
-        getline(fin1, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        bn.bn_w[i] = temp;
-    }
-
-    ifstream fin2(bias);
-    getline(fin2, data);
-    for(int i=0;i<size;i++){
-        getline(fin2, data);
-        stringstream stream(data);
-        float temp;
-        stream >> temp;
-        bn.bn_b[i] = temp;
-    }
-    return bn;
-}
-#endif
 
 void cnn::t(int s){
 	for(int i=0;i<s;i++){
@@ -443,6 +393,7 @@ fc_weight get_fc_weight(string fc_file_w){
             fc_w.weight[i][j] = temp;
         }
     }
+    fin.close();
 
     return fc_w;
 }
@@ -464,6 +415,8 @@ fc_bias get_fc_bias(string fc_file_b){
         stream >> temp;
         bias.bias[i] = temp;
     }
+    fin.close();
+
     return bias;
 }
 
