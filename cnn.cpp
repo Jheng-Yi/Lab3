@@ -48,115 +48,77 @@ void cnn::r_img(string filename, string im_type){
     //cout << channel[0][0].size() << endl;
 }
 #elif (quantize == 0)
-void cnn::r_img(string file_name, string file_type){
-    Mat image,temp,after;
-    if (file_type == "Depth") {
-        channel_num=1;
-        image = imread(file_name, IMREAD_GRAYSCALE);
-        if (image.cols > image.rows) {
-            float r = 256.0/image.cols;
-            int d = int(image.rows * r);
-            cv::resize(image, temp, Size(256,d),INTER_CUBIC);
-            int number_of_fill = 256-d;
-            copyMakeBorder(temp, after, 0, number_of_fill, 0, 0, 0);
+
+void cnn::r_img(string filename, string im_type){
+    Mat image, resized_image;
+    if(im_type == "RGB"){
+        image = imread(filename, IMREAD_COLOR);
+        if(image.empty()){   // Check for invalid input
+            cout << "Could not open or find the image" << endl;
+            exit(-1);
         }
-        else{
-            float r = 256.0/image.rows;
-            int d = int(image.cols * r);
-            cv::resize(image, temp, Size(d,256),INTER_CUBIC);
-            int number_of_fill = 256-d;
-            copyMakeBorder(temp, after, 0, 0, 0, number_of_fill, 0);
+        channel = cnn::resize(size, channel_num);
+        if(image.rows > image.cols){
+            float x = 256/image.rows;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+        }else{
+            float x = 256/image.cols;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }
-    }
-    else if (file_type == "RGB"){
-        image = imread(file_name, IMREAD_COLOR); // 讀取圖片
-        if (image.cols > image.rows) {
-            float r = 256.0/image.cols;
-            int d = int(image.rows * r);
-            cv::resize(image, temp, Size(256,d),INTER_CUBIC);
-            int number_of_fill = 256-d;
-            copyMakeBorder(temp, temp, 0, number_of_fill, 0, 0, 0);
-        }
-        else{
-            float r = 256.0/image.rows;
-            int d = int(image.cols * r);
-            cv::resize(image, temp, Size(d,256),INTER_CUBIC);
-            int number_of_fill = 256-d;
-            copyMakeBorder(temp, temp, 0, 0, 0, number_of_fill, 0);
-        }
-        cvtColor(temp, after, COLOR_BGR2RGB);//BGR -> RGB
-    }
-    else{
-        cout << "File type should be \"rgb\" or \"depth\"!" << endl;
-        exit(1);
-    }
-    //1 for B, 2 for G, 3 for R
-    channel.clear();
-    channel = cnn::resize(size, channel_num);
-    for(int i = 0; i < after.rows; i++){
-        for(int j = 0; j < after.cols; j++){
-            if (channel_num==1) {
-                channel[0][i][j] = after.at<uchar>(i,j)/256.0;
-            }
-            else{
+
+        for(int i=0;i<resized_image.rows;i++){
+            for(int j=0;j<resized_image.cols;j++){
                 Vec3b rgbPixel;
-                rgbPixel = after.at<Vec3b>(i, j);//BGR
-                for (int k=0; k<channel_num; k++) {
-                    channel[k][i][j] = rgbPixel.val[k]/256.0;
+                rgbPixel = resized_image.at<Vec3b>(i, j);//BGR
+                for(int ch=0;ch<3;ch++){
+                    channel[ch][i][j] = rgbPixel.val[2-ch]/256.0;
                 }
             }
         }
+        
+        #if (debug)
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
+                for(int ch=0;ch<3;ch++){
+                    channel[ch][i][j] = 1.0;
+                }
+            }
+        }
+        #endif
+    }else if(im_type == "Depth"){
+        image = imread(filename, IMREAD_GRAYSCALE);
+        if(image.empty()){
+            cout << "Could not open or find the image" << endl;
+            exit(-1);
+        }
+        channel_num = 1;
+        channel = cnn::resize(size, channel_num);
+        if(image.rows > image.cols){
+            float x = 256/image.rows;
+            int d = int(image.cols*x);
+            cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+        }else{
+            float x = 256/image.cols;
+            int d = int(image.rows*x);
+            cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+        }
+        for(int i=0;i<resized_image.rows;i++){
+            for(int j=0;j<resized_image.cols;j++){
+                uchar depthPixel;
+                depthPixel = resized_image.at<uchar>(i,j);
+                channel[0][i][j] = depthPixel/256.0;
+            }
+        }
+        #if (debug)
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
+                channel[0][i][j] = 1.0;
+            }
+        }
+        #endif
     }
-// void cnn::r_img(string filename, string im_type){
-//     Mat image;
-//     if(im_type == "RGB"){
-//         image = imread(filename, IMREAD_COLOR);
-//         if(image.empty()){   // Check for invalid input
-//             cout << "Could not open or find the image" << endl;
-//             exit(-1);
-//         }
-//         channel = cnn::resize(size, channel_num);
-//         for(int i=0;i<image.rows;i++){
-//             for(int j=0;j<image.cols;j++){
-//                 Vec3b rgbPixel;
-//                 rgbPixel = image.at<Vec3b>(i, j);//BGR
-//                 for(int ch=0;ch<3;ch++){
-//                     channel[ch][i][j] = rgbPixel.val[2-ch]/256.0;
-//                 }
-//             }
-//         }
-//         #if (debug)
-//         for(int i=0;i<image.rows;i++){
-//             for(int j=0;j<image.cols;j++){
-//                 for(int ch=0;ch<3;ch++){
-//                     channel[ch][i][j] = 1.0;
-//                 }
-//             }
-//         }
-//         #endif
-//     }else if(im_type == "Depth"){
-//         image = imread(filename, IMREAD_GRAYSCALE);
-//         if(image.empty()){
-//             cout << "Could not open or find the image" << endl;
-//             exit(-1);
-//         }
-//         channel_num = 1;
-//         channel = cnn::resize(size, channel_num);
-//         for(int i=0;i<image.rows;i++){
-//             for(int j=0;j<image.cols;j++){
-//                 uchar depthPixel;
-//                 depthPixel = image.at<uchar>(i,j);
-//                 channel[0][i][j] = depthPixel/256.0;
-//             }
-//         }
-//         #if (debug)
-//         for(int i=0;i<image.rows;i++){
-//             for(int j=0;j<image.cols;j++){
-//                 channel[0][i][j] = 1.0;
-//             }
-//         }
-//         #endif
-//     }
     //cout << channel.size() << endl;
     //cout << channel[0].size() << endl;
     //cout << channel[0][0].size() << endl;

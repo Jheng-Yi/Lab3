@@ -1,6 +1,6 @@
 #define CNN
 #define quantize 0
-#define debug 1
+#define debug 0
 #include<iostream>
 #include<fstream>
 #include<vector>

@@ -192,12 +192,6 @@ int main(){
 			test_RGB.maxpooling(2, 2);
 		}
 
-		if(cnt == 8){
-			for(int i=0;i<32;i++){
-				cout << running_mean.bias[i] << endl;
-			}
-		}
-
 		//Depth
 		para_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
 		run_m_depth = "./data_32bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".bn.running_mean";
@@ -210,16 +204,9 @@ int main(){
 		running_var = get_bias(run_v_depth);
 		bn_weight = get_bias(bn_w);
 		bn_bias = get_bias(bn_b);
-		cout << cnt+1 << "conv" << endl;
 		test_Depth.conv(kernel, running_mean, running_var, bn_weight, bn_bias, 1);
 		if(cnt % 2 == 0){
 			test_Depth.maxpooling(2, 2);
-		}
-
-		if(cnt == 8){
-			for(int i=0;i<32;i++){
-				cout << running_mean.bias[i] << endl;
-			}
 		}
 	}
 
