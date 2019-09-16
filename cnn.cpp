@@ -497,3 +497,24 @@ string ToString(int sel){
         return ".body";
     }
 }
+
+int getdir(string dir, vector<string> &files, unsigned seed){
+    DIR *dp;
+    vector<string> temp;
+    struct dirent *dirp;
+    if((dp = opendir(dir.c_str())) == NULL){
+        cout << "Error(" << errno << ") opening " << dir << endl;
+        return errno;
+    }
+    while((dirp = readdir(dp)) != NULL){
+        if (string(dirp->d_name)==string("..") || string(dirp->d_name)==string(".")) {
+            continue;
+        }
+        temp.push_back(dir+string(dirp->d_name));
+        
+    }
+    shuffle(temp.begin(), temp.end(), default_random_engine (seed));
+    files.push_back(temp.front());
+    closedir(dp);
+    return 0;
+}
