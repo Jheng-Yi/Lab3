@@ -2,7 +2,7 @@
 
 cnn::cnn():channel(0), size(256), channel_num(3){}
 cnn::~cnn(){}
-#if (quantize == 0)
+#if (quantize)
 void cnn::r_img(string filename, string im_type){
     Mat image, resized_image;
     if(im_type == "RGB"){
@@ -60,15 +60,22 @@ void cnn::r_img(string filename, string im_type){
                 channel[0][i][j] = (channel[0][i][j]/128.0) - 0.5;
             }
         }
+        #if (debug)
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
+                channel[0][i][j] = 1.0;
+            }
+        }
+        #endif
     }
     //cout << channel.size() << endl;
     //cout << channel[0].size() << endl;
     //cout << channel[0][0].size() << endl;
 }
-#elif (quantize == 1)
+#elif (quantize == 0)
 
 void cnn::r_img(string filename, string im_type){
-    Mat image, resized_image;
+    Mat image, resized_image, test_im;
     if(im_type == "RGB"){
         image = imread(filename, IMREAD_COLOR);
         if(image.empty()){   // Check for invalid input
@@ -85,7 +92,6 @@ void cnn::r_img(string filename, string im_type){
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }
-
         for(int i=0;i<resized_image.rows;i++){
             for(int j=0;j<resized_image.cols;j++){
                 Vec3b rgbPixel;
@@ -95,7 +101,6 @@ void cnn::r_img(string filename, string im_type){
                 }
             }
         }
-        
         #if (debug)
         for(int i=0;i<256;i++){
             for(int j=0;j<256;j++){
@@ -117,10 +122,14 @@ void cnn::r_img(string filename, string im_type){
             float x = 256/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+            // copyMakeBorder(image, test_im, 0, 256-image.rows, 0, 256-image.cols, 0);
+            // imwrite("./out.jpg", test_im);
         }else{
             float x = 256/image.cols;
             int d = int(image.rows*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+            // copyMakeBorder(image, test_im, 0, 256-image.rows, 0, 256-image.cols, 0);
+            // imwrite("./out.jpg", test_im);
         }
         for(int i=0;i<resized_image.rows;i++){
             for(int j=0;j<resized_image.cols;j++){
@@ -129,6 +138,7 @@ void cnn::r_img(string filename, string im_type){
                 channel[0][i][j] = depthPixel/256.0;
             }
         }
+
         #if (debug)
         for(int i=0;i<256;i++){
             for(int j=0;j<256;j++){
@@ -156,7 +166,7 @@ image_type cnn::resize(int newsize, int newchannel_num){ // image[channel][row][
     return im;
 }
 
-#if (quantize == 1)
+#if (quantize)
 void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -188,7 +198,7 @@ void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[ou
     }
     cout << endl;*/
 }
-#elif (quantize == 0)
+#elif (!quantize)
 void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -473,7 +483,6 @@ fc_type full_connected(image_type rgb, image_type depth, string weight_file_name
     return result;
 }
 
-
 string ToString(int sel){
     if(sel){
         switch(sel % 2){
@@ -488,19 +497,3 @@ string ToString(int sel){
         return ".body";
     }
 }
-// #else
-// string ToString(int sel){
-//     if(sel){
-//         switch(sel % 2){
-//             case 0:
-//                 return ".conv.0.body";
-//             case 1:
-//                 return ".conv.0.body";
-//             default:
-//                 return "";
-//         }
-//     }else{
-//         return ".body";
-//     }
-// }
-// #endif

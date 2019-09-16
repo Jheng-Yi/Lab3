@@ -7,8 +7,8 @@ int main(){
 	clock_t start, end;
 	start = clock();
 	
-	string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/00/P3_G00_0258.jpg";
-	string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/00/P3_G00_0258.jpg";
+	string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/14/P4_G015_0090.jpg";
+	string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/14/P4_G015_0090.jpg";
 	
 	cnn test_RGB = cnn();
 	cnn test_Depth = cnn();
@@ -16,7 +16,7 @@ int main(){
 	test_RGB.r_img(filename_rgb, "RGB");
 	test_Depth.r_img(filename_depth, "Depth");
 
-	#if (quantize == 1)
+	#if (quantize)
 
 	kernel_type kernel;
 	bias_type bias;
@@ -73,7 +73,7 @@ int main(){
 
 	return 0;
 
-	#elif (quantize == 0)
+	#elif (!quantize)
 
 	kernel_type kernel;
 	bias_type running_mean;
