@@ -4,16 +4,12 @@
 
 
 int main(){
-	clock_t start, end;
-	start = clock();
+	clock_t start, local_start, local_end, end;
 	
 	// string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/14/P4_G015_0090.jpg";
 	// string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/14/P4_G015_0090.jpg";
 	string dataset_root = "D:/jheng1/Gesture_recognition20190625/dataset/";
 	string weight_root = "C:/Users/jheng1/Desktop/Lab3/data_32bit/";
-
-	cnn test_RGB = cnn();
-	cnn test_Depth = cnn();
 
 	// test_RGB.r_img(filename_rgb, "RGB");
 	// test_Depth.r_img(filename_depth, "Depth");
@@ -86,16 +82,16 @@ int main(){
 	fc_type result;
 	result = fc(test_RGB.get_channel(), test_Depth.get_channel(), fc_w, fc_b);
 
-	int ans = 0;
+	int predict = 0;
 	float compare = result[0];
 	for(int i=0;i<24;i++){
 		cout << i << " " << result[i] << endl;
 		if(compare < result[i]){
-			ans = i;
+			predict = i;
 			compare = result[i];
 		}
 	}
-	cout << "ans = " << ans << endl;
+	cout << "predict = " << predict << endl;
 
 	return 0;
 
@@ -125,16 +121,16 @@ int main(){
 	int i = 1;
 	int j = 1;
 	#endif
-	int currect = 0;
-	for(int i=0;i<24;i++){
-		cout << rgb_file[i] << endl;
-	}
+	int correct = 0;
+
+	start = clock();
 	for(int num=0;num<24;num++){
-		cout << "1\n";
-		cout << rgb_file[num] << endl;
+		cnn test_RGB = cnn();
+		cnn test_Depth = cnn();
+		cout << num+1 << " iteration" << endl;
+		local_start = clock();
 		test_RGB.r_img(rgb_file[num], "RGB");
 		test_Depth.r_img(depth_file[num], "Depth");
-		cout << "2\n";
 		for(int cnt=0;cnt<9;cnt++){
 			//RGB
 			para_rgb = "./data_32bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
@@ -148,7 +144,7 @@ int main(){
 			running_var = get_bias(run_v_rgb);
 			bn_weight = get_bias(bn_w);
 			bn_bias = get_bias(bn_b);
-			cout << cnt+1 << " conv" << endl;
+			//cout << cnt+1 << " conv" << endl;
 			test_RGB.conv(kernel, running_mean, running_var, bn_weight, bn_bias, 1);
 			if(cnt % 2 == 0){
 				test_RGB.maxpooling(2, 2);
@@ -171,27 +167,31 @@ int main(){
 				test_Depth.maxpooling(2, 2);
 			}
 		}
-		cout << "3\n";
 		test_RGB.avgpooling();
 		test_Depth.avgpooling();
-		cout << "4\n";
 		fc_w = get_fc_weight("./data_32bit/classifier_concat.weight");
 		fc_b = get_fc_bias("./data_32bit/classifier_concat.bias");
 		fc_type result;
 		result = fc(test_RGB.get_channel(), test_Depth.get_channel(), get_fc_weight("./data_32bit/classifier_concat.weight"), get_fc_bias("./data_32bit/classifier_concat.bias"));
-		cout << "5\n";
-		int ans = 0;
+		int predict = 0;
 		float compare = result[0];
 		for(int i=0;i<24;i++){
-			cout << i << " " << result[i] << endl;
+			//cout << i << " " << result[i] << endl;
 			if(compare < result[i]){
-				ans = i;
+				predict = i;
 				compare = result[i];
 			}
 		}
-		cout << "predict = " << ans << endl;
+		local_end = clock();
+		cout << "prediction: " << predict << ", "; 
+		cout << "Ans: " << xxx[num] << endl;
+		cout << "time: " << (local_end-local_start)/CLOCKS_PER_SEC << "s" << endl;
+		if(predict == xxx[num]){
+			correct++;
+		}
 	}
-	cout << "accuracy: " << currect/float(xxx.size()) << endl;
+	end = clock();
+	cout << "accuracy: " << correct/float(xxx.size()) << endl;
 	cout << "Time: " << (end-start)/ CLOCKS_PER_SEC << "s" <<  endl;
 	return 0;
 	#endif

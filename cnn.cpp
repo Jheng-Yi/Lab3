@@ -290,7 +290,7 @@ void cnn::maxpooling(int kernel_size, int stride){
         cout << endl;
     }
     cout << result[0].size() << endl;*/
-    cout << channel_num << " " << size << endl;
+    //cout << channel_num << " " << size << endl;
 }
 
 void cnn::avgpooling(){
@@ -312,7 +312,7 @@ void cnn::avgpooling(){
     channel.clear();
     channel = resize(1, 64);
     channel = result;
-    cout << channel_num << " " << size << endl;
+    //cout << channel_num << " " << size << endl;
     //cout << channel[0][0][0] << endl;
 }
 
