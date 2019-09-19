@@ -170,7 +170,7 @@ image_type cnn::resize(int newsize, int newchannel_num){ // image[channel][row][
     return im;
 }
 
-#if (quantize == 1)
+#if (quantize > 0)
 void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -233,38 +233,6 @@ void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var
     #endif
     ReLu();
     channel_num = channel.size();
-}
-#elif (quantize == 2)
-void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[output_channel][input_channel][row][col]
-    image_type padding_channel;                                     // padding_channel[channel_num][row][col]
-    padding_channel = padding(channel, kernel.kernel_size, stride);
-    channel = resize(size, kernel.output_size);
-
-    for(int ch_o=0;ch_o<kernel.output_size;ch_o++){
-        for(int row=0;row<size;row++){
-            for(int col=0;col<size;col++){
-                for(int ch_i=0;ch_i<kernel.input_size;ch_i++){
-                    for(int p=0;p<kernel.kernel_size;p++){
-                        for(int q=0;q<kernel.kernel_size;q++){
-                            channel[ch_o][row][col] += padding_channel[ch_i][row*stride+p][col*stride+q]*kernel.kernel[ch_o][ch_i][p][q];
-                        }
-                    }
-                }
-                channel[ch_o][row][col] += bias.bias[ch_o];
-            }
-        }
-    }
-
-    ReLu();
-    channel_num = channel.size();
-    /*
-    for(int i=0;i<4;i++){
-        for(int j=0;j<4;j++){
-            cout << channel[0][i][j] << " ";
-        }
-        cout << endl;
-    }
-    cout << endl;*/
 }
 #endif
 
@@ -558,4 +526,25 @@ int getdir(string dir, vector<string> &files, unsigned seed){
     }
     closedir(dp);
     return 0;
+}
+
+void cnn::quantize_activation(int bit_width, int frational_length){
+    image_type quan_group;
+    quan_group = resize(size, channel_num);
+    double interval = pow(2,-1 * frational_length);
+    double half_interval = interval / 2;
+    double max_val = (pow(2, bit_width - 1) - 1) * interval;
+    double min_val = - (pow(2, bit_width -1)) * interval;
+    for (int i=0; i<channel.size(); i++) {
+        for (int j=0; j<channel[i].size(); j++) {
+            for (int k=0; k<channel[i][j].size(); k++) {
+                quan_group[i][j][k] = floor((channel[i][j][k] + half_interval) / interval);
+                quan_group[i][j][k] = quan_group[i][j][k] * interval;
+                quan_group[i][j][k] = fmin(quan_group[i][j][k], max_val);
+                quan_group[i][j][k] = fmax(quan_group[i][j][k], min_val);
+            }
+        }
+    }
+    channel.clear();
+    channel = quan_group;
 }

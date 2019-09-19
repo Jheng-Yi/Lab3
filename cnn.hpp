@@ -37,12 +37,10 @@ class cnn{
         ~cnn();
         void r_img(string filename, string im_type);
         image_type resize(int newsize, int newchannel);
-        #if (quantize == 1)
+        #if (quantize > 0)
         void conv(kernel_type kernel, bias_type bias, int stride);
         #elif (quantize == 0)
         void conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride);
-        #elif (quantize == 2)
-        
         #endif
         image_type padding(image_type before_padding, int kernel_size, int stride);
         void ReLu();
@@ -50,6 +48,7 @@ class cnn{
         void avgpooling();
         void t(int s);
         image_type get_channel();
+        void quantize_activation(int bit_width, int frational_length);
     private:
         image_type channel;
         int size;

@@ -3,9 +3,10 @@
 #include <time.h>
 
 
+vector<int> rgb_frational = {7,4,5,5,5,5,5,4,7,2};
+vector<int> depth_frational = {7,5,5,4,5,4,5,4,5,2};
 int main(){
 	clock_t start, local_start, local_end, end;
-	
 	// string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/14/P4_G015_0090.jpg";
 	// string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/14/P4_G015_0090.jpg";
 	string dataset_root = "D:/jheng1/Gesture_recognition20190625/dataset/";
