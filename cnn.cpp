@@ -84,13 +84,17 @@ void cnn::r_img(string filename, string im_type){
         }
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+            // copyMakeBorder(resized_image, test_im, 0, 0, 0, 256-image.cols, 0);
+            // imwrite("./test.jpg", test_im);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+            // copyMakeBorder(resized_image, test_im, 0, 256-image.rows, 0, 0, 0);
+            // imwrite("./test.jpg", test_im);
         }
         for(int i=0;i<resized_image.rows;i++){
             for(int j=0;j<resized_image.cols;j++){
@@ -119,13 +123,13 @@ void cnn::r_img(string filename, string im_type){
         channel_num = 1;
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
             // copyMakeBorder(image, test_im, 0, 256-image.rows, 0, 256-image.cols, 0);
             // imwrite("./out.jpg", test_im);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.rows*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
             // copyMakeBorder(image, test_im, 0, 256-image.rows, 0, 256-image.cols, 0);
@@ -514,7 +518,12 @@ int getdir(string dir, vector<string> &files, unsigned seed){
         
     }
     shuffle(temp.begin(), temp.end(), default_random_engine (seed));
-    files.push_back(temp.front());
+    // files.push_back(temp.front());
+    while (temp.size() > 1)
+    {
+        files.push_back(temp.front());
+        temp.erase(temp.begin());
+    }
     closedir(dp);
     return 0;
 }

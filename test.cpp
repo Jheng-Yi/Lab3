@@ -23,14 +23,20 @@ int main(){
     vector<int> xxx = vector<int>();
     unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count ();
     for (int i = 0; i < 24; ++i) {
-        xxx.push_back(i);
+
         if(i < 10){
             getdir(string(image_rgb + "0" + to_string(i) + "/"), rgb_file, seed);
             getdir(string(image_depth + "0" + to_string(i) + "/"), depth_file, seed);
+			for (int add = 0; add < cnt; add++){
+				xxx.push_back(i);
+			}
         }
         else{
             getdir(string(image_rgb+ to_string(i) + "/"), rgb_file, seed);
             getdir(string(image_depth+ to_string(i) + "/"), depth_file, seed);
+			for (int add = 0; add < cnt; add++){
+				xxx.push_back(i);
+			}
         }
         
     }
@@ -124,7 +130,7 @@ int main(){
 	int correct = 0;
 
 	start = clock();
-	for(int num=0;num<24;num++){
+	for(int num=0;num<xxx.size();num++){
 		cnn test_RGB = cnn();
 		cnn test_Depth = cnn();
 		cout << num+1 << " iteration" << endl;
