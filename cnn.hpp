@@ -1,5 +1,5 @@
 #define CNN
-#define quantize 0  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
+#define quantize 2  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
 #define debug 0
 #include <bits/stdc++.h>
 #include <opencv2/opencv.hpp>
@@ -41,6 +41,8 @@ class cnn{
         void conv(kernel_type kernel, bias_type bias, int stride);
         #elif (quantize == 0)
         void conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride);
+        #elif (quantize == 2)
+        
         #endif
         image_type padding(image_type before_padding, int kernel_size, int stride);
         void ReLu();

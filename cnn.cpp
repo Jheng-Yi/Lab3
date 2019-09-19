@@ -170,7 +170,7 @@ image_type cnn::resize(int newsize, int newchannel_num){ // image[channel][row][
     return im;
 }
 
-#if (quantize)
+#if (quantize == 1)
 void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -202,7 +202,7 @@ void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[ou
     }
     cout << endl;*/
 }
-#elif (!quantize)
+#elif (quantize == 0)
 void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -233,6 +233,38 @@ void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var
     #endif
     ReLu();
     channel_num = channel.size();
+}
+#elif (quantize == 2)
+void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[output_channel][input_channel][row][col]
+    image_type padding_channel;                                     // padding_channel[channel_num][row][col]
+    padding_channel = padding(channel, kernel.kernel_size, stride);
+    channel = resize(size, kernel.output_size);
+
+    for(int ch_o=0;ch_o<kernel.output_size;ch_o++){
+        for(int row=0;row<size;row++){
+            for(int col=0;col<size;col++){
+                for(int ch_i=0;ch_i<kernel.input_size;ch_i++){
+                    for(int p=0;p<kernel.kernel_size;p++){
+                        for(int q=0;q<kernel.kernel_size;q++){
+                            channel[ch_o][row][col] += padding_channel[ch_i][row*stride+p][col*stride+q]*kernel.kernel[ch_o][ch_i][p][q];
+                        }
+                    }
+                }
+                channel[ch_o][row][col] += bias.bias[ch_o];
+            }
+        }
+    }
+
+    ReLu();
+    channel_num = channel.size();
+    /*
+    for(int i=0;i<4;i++){
+        for(int j=0;j<4;j++){
+            cout << channel[0][i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;*/
 }
 #endif
 
