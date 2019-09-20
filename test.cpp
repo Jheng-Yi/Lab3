@@ -28,6 +28,7 @@ int main(){
         if(i < 10){
             getdir(string(image_rgb + "0" + to_string(i) + "/"), rgb_file, seed);
             getdir(string(image_depth + "0" + to_string(i) + "/"), depth_file, seed);
+			int cnt = rgb_file.size() - xxx.size();
 			for (int add = 0; add < cnt; add++){
 				xxx.push_back(i);
 			}
@@ -35,6 +36,7 @@ int main(){
         else{
             getdir(string(image_rgb+ to_string(i) + "/"), rgb_file, seed);
             getdir(string(image_depth+ to_string(i) + "/"), depth_file, seed);
+			int cnt = rgb_file.size() - xxx.size();
 			for (int add = 0; add < cnt; add++){
 				xxx.push_back(i);
 			}
@@ -45,7 +47,70 @@ int main(){
     std::shuffle (rgb_file.begin (), rgb_file.end (), std::default_random_engine (seed));
     std::shuffle (depth_file.begin (), depth_file.end (), std::default_random_engine (seed));
 
-	#if (quantize)
+	#if(quantize == 2)
+
+	kernel_type kernel;
+	bias_type bias;
+
+	string weight_para_path;
+	string bias_para_path;
+
+	fc_weight fc_w;
+	fc_bias fc_b;
+
+	for(int cnt=0;cnt<9;cnt++){
+		cnn test_RGB = cnn();
+		cnn test_Depth = cnn();
+
+		test_RGB.r_img(rgb_file[cnt]], "RGB");
+		test_Depth.r_img(depth_file[cnt], "Depth");
+
+		//RGB
+		weight_para_path = "./data_8bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
+		bias_para_path = "./data_8bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.bias";
+
+		kernel = get_kernel(weight_para_path);
+		bias = get_bias(bias_para_path);
+		cout << cnt+1 << " conv" << endl;
+		test_RGB.conv(kernel, bias, 1);
+		if(cnt % 2 == 0){
+			test_RGB.maxpooling(2, 2);
+		}
+
+		//Depth
+		weight_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
+		bias_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.bias";
+
+		kernel = get_kernel(weight_para_path);
+		bias = get_bias(bias_para_path);
+		test_Depth.conv(kernel, bias, 1);
+		if(cnt % 2 == 0){
+			test_Depth.maxpooling(2, 2);
+		}
+	}
+
+	test_RGB.avgpooling();
+	test_Depth.avgpooling();
+
+	fc_w = get_fc_weight("./data_8bit/classifier_concat.weight");
+	fc_b = get_fc_bias("./data_8bit/classifier_concat.bias");
+	fc_type result;
+	result = fc(test_RGB.get_channel(), test_Depth.get_channel(), fc_w, fc_b);
+
+	int predict = 0;
+	float compare = result[0];
+	for(int i=0;i<24;i++){
+		cout << i << " " << result[i] << endl;
+		if(compare < result[i]){
+			predict = i;
+			compare = result[i];
+		}
+	}
+	cout << "predict = " << predict << endl;
+
+	return 0;
+
+	#elif (quantize == 1)
 
 	kernel_type kernel;
 	bias_type bias;
@@ -102,7 +167,7 @@ int main(){
 
 	return 0;
 
-	#elif (!quantize)
+	#elif (quantize == 0)
 
 	kernel_type kernel;
 	bias_type running_mean;
