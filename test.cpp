@@ -57,56 +57,71 @@ int main(){
 
 	fc_weight fc_w;
 	fc_bias fc_b;
-
-	for(int cnt=0;cnt<9;cnt++){
+	
+	for(int num=0;num<xxx.size();num++){
 		cnn test_RGB = cnn();
 		cnn test_Depth = cnn();
+		cout << num+1 << " iteration" << endl;
+		local_start = clock();
+		test_RGB.r_img(rgb_file[num], "RGB");
+		test_Depth.r_img(depth_file[num], "Depth");
 
-		test_RGB.r_img(rgb_file[cnt]], "RGB");
-		test_Depth.r_img(depth_file[cnt], "Depth");
+		test_RGB.quantize_activation(8, rgb_frational[0]);
+		test_Depth.quantize_activation(8, depth_frational[0]);
 
-		//RGB
-		weight_para_path = "./data_8bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
-		bias_para_path = "./data_8bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.bias";
+		int correct = 0;
 
-		kernel = get_kernel(weight_para_path);
-		bias = get_bias(bias_para_path);
-		cout << cnt+1 << " conv" << endl;
-		test_RGB.conv(kernel, bias, 1);
-		if(cnt % 2 == 0){
-			test_RGB.maxpooling(2, 2);
+		for(int cnt=0;cnt<9;cnt++){
+			//RGB
+			weight_para_path = "./data_8bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
+			bias_para_path = "./data_8bit/rgb_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.bias";
+
+			kernel = get_kernel(weight_para_path);
+			bias = get_bias(bias_para_path);
+			cout << cnt+1 << " conv" << endl;
+			test_RGB.conv(kernel, bias, 1);
+			if(cnt % 2 == 0){
+				test_RGB.maxpooling(2, 2);
+			}
+			test_RGB.quantize_activation(8, rgb_frational[cnt]);
+
+			//Depth
+			weight_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
+			bias_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.bias";
+
+			kernel = get_kernel(weight_para_path);
+			bias = get_bias(bias_para_path);
+			test_Depth.conv(kernel, bias, 1);
+			if(cnt % 2 == 0){
+				test_Depth.maxpooling(2, 2);
+			}
+			test_Depth.quantize_activation(8, depth_frational[cnt]);
 		}
 
-		//Depth
-		weight_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
-		bias_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.bias";
+		test_RGB.avgpooling();
+		test_Depth.avgpooling();
 
-		kernel = get_kernel(weight_para_path);
-		bias = get_bias(bias_para_path);
-		test_Depth.conv(kernel, bias, 1);
-		if(cnt % 2 == 0){
-			test_Depth.maxpooling(2, 2);
+		fc_w = get_fc_weight("./data_8bit/classifier_concat.weight");
+		fc_b = get_fc_bias("./data_8bit/classifier_concat.bias");
+		fc_type result;
+		result = fc(test_RGB.get_channel(), test_Depth.get_channel(), fc_w, fc_b);
+
+		int predict = 0;
+		float compare = result[0];
+		for(int i=0;i<24;i++){
+			cout << i << " " << result[i] << endl;
+			if(compare < result[i]){
+				predict = i;
+				compare = result[i];
+			}
+		}
+		cout << "prediction: " << predict << ", "; 
+		cout << "Ans: " << xxx[num] << endl;
+		cout << "time: " << (local_end-local_start)/CLOCKS_PER_SEC << "s" << endl;
+		if(predict == xxx[num]){
+			correct++;
 		}
 	}
-
-	test_RGB.avgpooling();
-	test_Depth.avgpooling();
-
-	fc_w = get_fc_weight("./data_8bit/classifier_concat.weight");
-	fc_b = get_fc_bias("./data_8bit/classifier_concat.bias");
-	fc_type result;
-	result = fc(test_RGB.get_channel(), test_Depth.get_channel(), fc_w, fc_b);
-
-	int predict = 0;
-	float compare = result[0];
-	for(int i=0;i<24;i++){
-		cout << i << " " << result[i] << endl;
-		if(compare < result[i]){
-			predict = i;
-			compare = result[i];
-		}
-	}
-	cout << "predict = " << predict << endl;
 
 	return 0;
 
