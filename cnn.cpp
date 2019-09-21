@@ -13,11 +13,11 @@ void cnn::r_img(string filename, string im_type){
         }
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }
@@ -33,6 +33,15 @@ void cnn::r_img(string filename, string im_type){
                 }
             }
         }
+        #if (debug)
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
+                for(int ch=0;ch<3;ch++){
+                    channel[ch][i][j] = 1.0;
+                }
+            }
+        }
+        #endif
     }else if(im_type == "Depth"){
         image = imread(filename, IMREAD_GRAYSCALE);
         if(image.empty()){
@@ -42,11 +51,11 @@ void cnn::r_img(string filename, string im_type){
         channel_num = 1;
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.rows*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }

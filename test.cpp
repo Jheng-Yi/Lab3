@@ -47,6 +47,7 @@ int main(){
     std::shuffle (depth_file.begin (), depth_file.end (), std::default_random_engine (seed));
 
 	cout << rgb_file[0] << endl;
+	cout << depth_file[0] << endl;
 
 	#if(quantize == 2)
 
@@ -84,7 +85,7 @@ int main(){
 			bias = get_bias(bias_para_path);
 			cout << cnt+1 << " conv" << endl;
 			test_RGB.conv(kernel, bias, 1);
-			test_RGB.quantize_activation(8, rgb_frational[cnt]);
+			// test_RGB.quantize_activation(8, rgb_frational[cnt+1]);
 			if(cnt % 2 == 0){
 				test_RGB.maxpooling(2, 2);
 			}
@@ -96,7 +97,7 @@ int main(){
 			kernel = get_kernel(weight_para_path);
 			bias = get_bias(bias_para_path);
 			test_Depth.conv(kernel, bias, 1);
-			test_Depth.quantize_activation(8, depth_frational[cnt]);
+			// test_Depth.quantize_activation(8, depth_frational[cnt+1]);
 			if(cnt % 2 == 0){
 				test_Depth.maxpooling(2, 2);
 			}
