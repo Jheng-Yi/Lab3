@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+#include <omp.h>
 using namespace std;
 using namespace cv;
 

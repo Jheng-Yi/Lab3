@@ -46,6 +46,7 @@ int main(){
     std::shuffle (rgb_file.begin (), rgb_file.end (), std::default_random_engine (seed));
     std::shuffle (depth_file.begin (), depth_file.end (), std::default_random_engine (seed));
 
+	omp_set_num_threads(omp_get_max_threads());
 	#if(quantize)
 
 	kernel_type kernel;

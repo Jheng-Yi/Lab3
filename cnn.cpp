@@ -179,6 +179,7 @@ void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[ou
     padding_channel = padding(channel, kernel.kernel_size, stride);
     channel = resize(size, kernel.output_size);
 
+    #pragma omp parallel for
     for(int ch_o=0;ch_o<kernel.output_size;ch_o++){
         for(int row=0;row<size;row++){
             for(int col=0;col<size;col++){
@@ -211,6 +212,7 @@ void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var
     padding_channel = padding(channel, kernel.kernel_size, stride);
     channel = resize(size, kernel.output_size);
 
+    #pragma omp parallel for
     for(int ch_o=0;ch_o<kernel.output_size;ch_o++){
         for(int row=0;row<size;row++){
             for(int col=0;col<size;col++){
