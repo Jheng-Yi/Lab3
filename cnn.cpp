@@ -472,20 +472,21 @@ fc_type fc(image_type rgb, image_type depth, fc_weight fc_w, fc_bias fc_b){
     }
     return result;
 }
-fc_type full_connected(image_type rgb, image_type depth, string weight_file_name, string bias_file_name, int out_size){
-    fc_type result;
-    result.resize(out_size);
+
+// fc_type full_connected(image_type rgb, image_type depth, string weight_file_name, string bias_file_name, int out_size){
+//     fc_type result;
+//     result.resize(out_size);
     
-    fc_weight weight = get_fc_weight(weight_file_name);
-    bias_type bias = get_bias(bias_file_name);
-    for (int output = 0; output<result.size(); output++) {
-        for (int input = 0; input < rgb.size(); input++) {
-            result[output] += weight.weight[output][input]*rgb[input][0][0]+ weight.weight[output][input+rgb.size()]*depth[input][0][0];
-        }
-        result[output]+=bias.bias[output];
-    }
-    return result;
-}
+//     fc_weight weight = get_fc_weight(weight_file_name);
+//     bias_type bias = get_bias(bias_file_name);
+//     for (int output = 0; output<result.size(); output++) {
+//         for (int input = 0; input < rgb.size(); input++) {
+//             result[output] += weight.weight[output][input]*rgb[input][0][0]+ weight.weight[output][input+rgb.size()]*depth[input][0][0];
+//         }
+//         result[output]+=bias.bias[output];
+//     }
+//     return result;
+// }
 
 string ToString(int sel){
     if(sel){

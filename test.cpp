@@ -41,7 +41,6 @@ int main(){
 				xxx.push_back(i);
 			}
         }
-        
     }
     std::shuffle (xxx.begin (), xxx.end (), std::default_random_engine (seed));
     std::shuffle (rgb_file.begin (), rgb_file.end (), std::default_random_engine (seed));
