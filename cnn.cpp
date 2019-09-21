@@ -27,12 +27,18 @@ void cnn::r_img(string filename, string im_type){
                 rgbPixel = resized_image.at<Vec3b>(i, j);//BGR
                 for(int ch=0;ch<3;ch++){
                     channel[ch][i][j] = rgbPixel.val[2-ch] / 256.0;
-                    // if(channel[ch][i][j] > 127.0)
-                    //     channel[ch][i][j] = 127.0;
-                    // channel[ch][i][j] = (channel[ch][i][j]/128.0) - 0.5;
                 }
             }
         }
+        #if (debug)
+        for(int i=0;i<256;i++){
+            for(int j=0;j<256;j++){
+                for(int ch=0;ch<3;ch++){
+                    channel[ch][i][j] = 1.0;
+                }
+            }
+        }
+        #endif
     }else if(im_type == "Depth"){
         image = imread(filename, IMREAD_GRAYSCALE);
         if(image.empty()){
@@ -55,9 +61,6 @@ void cnn::r_img(string filename, string im_type){
                 uchar depthPixel;
                 depthPixel = resized_image.at<uchar>(i,j);
                 channel[0][i][j] = depthPixel / 256.0;
-                // if(channel[0][i][j] > 127.0)
-                //     channel[0][i][j] = 127.0;
-                // channel[0][i][j] = (channel[0][i][j]/128.0) - 0.5;
             }
         }
         #if (debug)
@@ -87,10 +90,14 @@ void cnn::r_img(string filename, string im_type){
             float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
+            // copyMakeBorder(resized_image, test_im, 0, 0, 0, 256-image.cols, 0);
+            // imwrite("./test.jpg", test_im);
         }else{
             float x = 256.0/image.cols;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
+            // copyMakeBorder(resized_image, test_im, 0, 256-image.rows, 0, 0, 0);
+            // imwrite("./test.jpg", test_im);
         }
         for(int i=0;i<resized_image.rows;i++){
             for(int j=0;j<resized_image.cols;j++){
@@ -166,7 +173,7 @@ image_type cnn::resize(int newsize, int newchannel_num){ // image[channel][row][
     return im;
 }
 
-#if (quantize)
+#if (quantize > 0)
 void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -198,7 +205,7 @@ void cnn::conv(kernel_type kernel, bias_type bias, int stride){     // kernel[ou
     }
     cout << endl;*/
 }
-#elif (!quantize)
+#elif (quantize == 0)
 void cnn::conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride){     // kernel[output_channel][input_channel][row][col]
     image_type padding_channel;                     // padding_channel[channel_num][row][col]
     padding_channel = padding(channel, kernel.kernel_size, stride);
@@ -290,7 +297,7 @@ void cnn::maxpooling(int kernel_size, int stride){
         cout << endl;
     }
     cout << result[0].size() << endl;*/
-    cout << channel_num << " " << size << endl;
+    //cout << channel_num << " " << size << endl;
 }
 
 void cnn::avgpooling(){
@@ -312,7 +319,7 @@ void cnn::avgpooling(){
     channel.clear();
     channel = resize(1, 64);
     channel = result;
-    cout << channel_num << " " << size << endl;
+    //cout << channel_num << " " << size << endl;
     //cout << channel[0][0][0] << endl;
 }
 
@@ -468,20 +475,21 @@ fc_type fc(image_type rgb, image_type depth, fc_weight fc_w, fc_bias fc_b){
     }
     return result;
 }
-fc_type full_connected(image_type rgb, image_type depth, string weight_file_name, string bias_file_name, int out_size){
-    fc_type result;
-    result.resize(out_size);
+
+// fc_type full_connected(image_type rgb, image_type depth, string weight_file_name, string bias_file_name, int out_size){
+//     fc_type result;
+//     result.resize(out_size);
     
-    fc_weight weight = get_fc_weight(weight_file_name);
-    bias_type bias = get_bias(bias_file_name);
-    for (int output = 0; output<result.size(); output++) {
-        for (int input = 0; input < rgb.size(); input++) {
-            result[output] += weight.weight[output][input]*rgb[input][0][0]+ weight.weight[output][input+rgb.size()]*depth[input][0][0];
-        }
-        result[output]+=bias.bias[output];
-    }
-    return result;
-}
+//     fc_weight weight = get_fc_weight(weight_file_name);
+//     bias_type bias = get_bias(bias_file_name);
+//     for (int output = 0; output<result.size(); output++) {
+//         for (int input = 0; input < rgb.size(); input++) {
+//             result[output] += weight.weight[output][input]*rgb[input][0][0]+ weight.weight[output][input+rgb.size()]*depth[input][0][0];
+//         }
+//         result[output]+=bias.bias[output];
+//     }
+//     return result;
+// }
 
 string ToString(int sel){
     if(sel){
@@ -496,4 +504,51 @@ string ToString(int sel){
     }else{
         return ".body";
     }
+}
+
+int getdir(string dir, vector<string> &files, unsigned seed){
+    DIR *dp;
+    vector<string> temp;
+    struct dirent *dirp;
+    if((dp = opendir(dir.c_str())) == NULL){
+        cout << "Error(" << errno << ") opening " << dir << endl;
+        return errno;
+    }
+    while((dirp = readdir(dp)) != NULL){
+        if (string(dirp->d_name)==string("..") || string(dirp->d_name)==string(".")) {
+            continue;
+        }
+        temp.push_back(dir+string(dirp->d_name));
+        
+    }
+    shuffle(temp.begin(), temp.end(), default_random_engine (seed));
+    // files.push_back(temp.front());
+    while (temp.size() > 1)
+    {
+        files.push_back(temp.front());
+        temp.erase(temp.begin());
+    }
+    closedir(dp);
+    return 0;
+}
+
+void cnn::quantize_activation(int bit_width, int frational_length){
+    image_type quan_group;
+    quan_group = resize(size, channel_num);
+    double interval = pow(2,-1 * frational_length);
+    double half_interval = interval / 2;
+    double max_val = (pow(2, bit_width - 1) - 1) * interval;
+    double min_val = - (pow(2, bit_width -1)) * interval;
+    for (int i=0; i<channel.size(); i++) {
+        for (int j=0; j<channel[i].size(); j++) {
+            for (int k=0; k<channel[i][j].size(); k++) {
+                quan_group[i][j][k] = floor((channel[i][j][k] + half_interval) / interval);
+                quan_group[i][j][k] = quan_group[i][j][k] * interval;
+                quan_group[i][j][k] = fmin(quan_group[i][j][k], max_val);
+                quan_group[i][j][k] = fmax(quan_group[i][j][k], min_val);
+            }
+        }
+    }
+    channel.clear();
+    channel = quan_group;
 }

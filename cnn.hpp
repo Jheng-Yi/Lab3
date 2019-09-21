@@ -1,15 +1,15 @@
 #define CNN
+<<<<<<< HEAD
 #define quantize 1  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
+=======
+#define quantize 2  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
+>>>>>>> quantize8bit
 #define debug 0
-#include<iostream>
-#include<fstream>
-#include<vector>
-#include<string>
-#include<cstdio>
-#include<sstream>
-#include<cmath>
-#include<tuple>
-#include<opencv2/opencv.hpp>
+#include <bits/stdc++.h>
+#include <opencv2/opencv.hpp>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
 using namespace std;
 using namespace cv;
 
@@ -41,7 +41,7 @@ class cnn{
         ~cnn();
         void r_img(string filename, string im_type);
         image_type resize(int newsize, int newchannel);
-        #if (quantize == 1)
+        #if (quantize > 0)
         void conv(kernel_type kernel, bias_type bias, int stride);
         #elif (quantize == 0)
         void conv(kernel_type kernel, bias_type running_mean, bias_type running_var, bias_type bn_w, bias_type bn_b, int stride);
@@ -52,6 +52,7 @@ class cnn{
         void avgpooling();
         void t(int s);
         image_type get_channel();
+        void quantize_activation(int bit_width, int frational_length);
     private:
         image_type channel;
         int size;
@@ -66,3 +67,4 @@ fc_bias get_fc_bias(string fc_file_b);
 fc_type fc(image_type rgb, image_type depth, fc_weight fc_w, fc_bias fc_b);
 fc_type full_connected(image_type rgb, image_type depth, string weight_file_name, string bias_file_name, int out_size);
 string ToString(int sel);
+int getdir(string dir, vector<string> &files, unsigned seed);
