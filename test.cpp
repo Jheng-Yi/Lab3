@@ -84,10 +84,10 @@ int main(){
 			bias = get_bias(bias_para_path);
 			cout << cnt+1 << " conv" << endl;
 			test_RGB.conv(kernel, bias, 1);
+			test_RGB.quantize_activation(8, rgb_frational[cnt]);
 			if(cnt % 2 == 0){
 				test_RGB.maxpooling(2, 2);
 			}
-			// test_RGB.quantize_activation(8, rgb_frational[cnt]);
 
 			//Depth
 			weight_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
@@ -96,10 +96,10 @@ int main(){
 			kernel = get_kernel(weight_para_path);
 			bias = get_bias(bias_para_path);
 			test_Depth.conv(kernel, bias, 1);
+			test_Depth.quantize_activation(8, depth_frational[cnt]);
 			if(cnt % 2 == 0){
 				test_Depth.maxpooling(2, 2);
 			}
-			// test_Depth.quantize_activation(8, depth_frational[cnt]);
 		}
 
 		test_RGB.avgpooling();
