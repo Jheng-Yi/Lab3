@@ -1,5 +1,5 @@
 #define CNN
-#define quantize 0  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
+#define quantize 1  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
 #define debug 0
 #include<iostream>
 #include<fstream>
