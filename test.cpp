@@ -10,15 +10,14 @@ int main(){
 	// string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/14/P4_G015_0090.jpg";
 	// string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/14/P4_G015_0090.jpg";
 	string dataset_root = "D:/jheng1/Gesture_recognition20190625/dataset/";
-	string weight_root = "C:/Users/jheng1/Desktop/Lab3/data_32bit/";
 
 	// test_RGB.r_img(filename_rgb, "RGB");
 	// test_Depth.r_img(filename_depth, "Depth");
 
 	vector<string> rgb_file = vector<string>();
     vector<string> depth_file = vector<string>();
-    string image_depth = dataset_root+"testing_depth/";
     string image_rgb = dataset_root+"testing_rgb/";
+    string image_depth = dataset_root+"testing_depth/";
 
 	///test shuffle image
     vector<int> xxx = vector<int>();
@@ -42,9 +41,12 @@ int main(){
 			}
         }
     }
+
     std::shuffle (xxx.begin (), xxx.end (), std::default_random_engine (seed));
     std::shuffle (rgb_file.begin (), rgb_file.end (), std::default_random_engine (seed));
     std::shuffle (depth_file.begin (), depth_file.end (), std::default_random_engine (seed));
+
+	cout << rgb_file[0] << endl;
 
 	#if(quantize == 2)
 
@@ -56,8 +58,11 @@ int main(){
 
 	fc_weight fc_w;
 	fc_bias fc_b;
-	
+
+	int correct = 0;
+	start = clock();	
 	for(int num=0;num<xxx.size();num++){
+		local_start = clock();
 		cnn test_RGB = cnn();
 		cnn test_Depth = cnn();
 		cout << num+1 << " iteration" << endl;
@@ -65,8 +70,8 @@ int main(){
 		test_RGB.r_img(rgb_file[num], "RGB");
 		test_Depth.r_img(depth_file[num], "Depth");
 
-		test_RGB.quantize_activation(8, rgb_frational[0]);
-		test_Depth.quantize_activation(8, depth_frational[0]);
+		// test_RGB.quantize_activation(8, rgb_frational[0]);
+		// test_Depth.quantize_activation(8, depth_frational[0]);
 
 		int correct = 0;
 
@@ -82,7 +87,7 @@ int main(){
 			if(cnt % 2 == 0){
 				test_RGB.maxpooling(2, 2);
 			}
-			test_RGB.quantize_activation(8, rgb_frational[cnt]);
+			// test_RGB.quantize_activation(8, rgb_frational[cnt]);
 
 			//Depth
 			weight_para_path = "./data_8bit/depth_feature."+to_string((cnt+1)/2)+ToString(cnt)+".conv.weight";
@@ -94,7 +99,7 @@ int main(){
 			if(cnt % 2 == 0){
 				test_Depth.maxpooling(2, 2);
 			}
-			test_Depth.quantize_activation(8, depth_frational[cnt]);
+			// test_Depth.quantize_activation(8, depth_frational[cnt]);
 		}
 
 		test_RGB.avgpooling();
@@ -104,6 +109,7 @@ int main(){
 		fc_b = get_fc_bias("./data_8bit/classifier_concat.bias");
 		fc_type result;
 		result = fc(test_RGB.get_channel(), test_Depth.get_channel(), fc_w, fc_b);
+		local_end = clock();
 
 		int predict = 0;
 		float compare = result[0];
@@ -121,7 +127,9 @@ int main(){
 			correct++;
 		}
 	}
-
+	end = clock();
+	cout << "accuracy: " << correct/float(xxx.size()) << endl;
+	cout << "Time: " << (end-start)/ CLOCKS_PER_SEC << "s" <<  endl;
 	return 0;
 
 	#elif (quantize == 1)
