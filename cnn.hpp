@@ -1,9 +1,5 @@
 #define CNN
-<<<<<<< HEAD
-#define quantize 1  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
-=======
 #define quantize 2  // 0 for 32*32, 1 for 32*8 , 2 for 8*8
->>>>>>> quantize8bit
 #define debug 0
 #include <bits/stdc++.h>
 #include <opencv2/opencv.hpp>
