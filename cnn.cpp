@@ -13,11 +13,11 @@ void cnn::r_img(string filename, string im_type){
         }
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }
@@ -42,11 +42,11 @@ void cnn::r_img(string filename, string im_type){
         channel_num = 1;
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.rows*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }
@@ -84,11 +84,11 @@ void cnn::r_img(string filename, string im_type){
         }
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
         }
@@ -119,13 +119,13 @@ void cnn::r_img(string filename, string im_type){
         channel_num = 1;
         channel = cnn::resize(size, channel_num);
         if(image.rows > image.cols){
-            float x = 256/image.rows;
+            float x = 256.0/image.rows;
             int d = int(image.cols*x);
             cv::resize(image, resized_image, Size(d, 256), 0, 0, INTER_LINEAR);
             // copyMakeBorder(image, test_im, 0, 256-image.rows, 0, 256-image.cols, 0);
             // imwrite("./out.jpg", test_im);
         }else{
-            float x = 256/image.cols;
+            float x = 256.0/image.cols;
             int d = int(image.rows*x);
             cv::resize(image, resized_image, Size(256, d), 0, 0, INTER_LINEAR);
             // copyMakeBorder(image, test_im, 0, 256-image.rows, 0, 256-image.cols, 0);
