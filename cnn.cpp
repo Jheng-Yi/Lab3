@@ -26,10 +26,10 @@ void cnn::r_img(string filename, string im_type){
                 Vec3b rgbPixel;
                 rgbPixel = resized_image.at<Vec3b>(i, j);//BGR
                 for(int ch=0;ch<3;ch++){
-                    channel[ch][i][j] = rgbPixel.val[2-ch];
-                    if(channel[ch][i][j] > 127.0)
-                        channel[ch][i][j] = 127.0;
-                    channel[ch][i][j] = (channel[ch][i][j]/128.0) - 0.5;
+                    channel[ch][i][j] = rgbPixel.val[2-ch] / 256.0;
+                    // if(channel[ch][i][j] > 127.0)
+                    //     channel[ch][i][j] = 127.0;
+                    // channel[ch][i][j] = (channel[ch][i][j]/128.0) - 0.5;
                 }
             }
         }
@@ -54,10 +54,10 @@ void cnn::r_img(string filename, string im_type){
             for(int j=0;j<resized_image.cols;j++){
                 uchar depthPixel;
                 depthPixel = resized_image.at<uchar>(i,j);
-                channel[0][i][j] = depthPixel;
-                if(channel[0][i][j] > 127.0)
-                    channel[0][i][j] = 127.0;
-                channel[0][i][j] = (channel[0][i][j]/128.0) - 0.5;
+                channel[0][i][j] = depthPixel / 256.0;
+                // if(channel[0][i][j] > 127.0)
+                //     channel[0][i][j] = 127.0;
+                // channel[0][i][j] = (channel[0][i][j]/128.0) - 0.5;
             }
         }
         #if (debug)

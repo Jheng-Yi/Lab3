@@ -7,8 +7,8 @@ int main(){
 	clock_t start, end;
 	start = clock();
 	
-	string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/14/P4_G015_0090.jpg";
-	string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/14/P4_G015_0090.jpg";
+	string filename_rgb = "D:/jheng1/Gesture_recognition20190625/dataset/testing_rgb/08/P1_G08_0004.jpg";
+	string filename_depth = "D:/jheng1/Gesture_recognition20190625/dataset/testing_depth/08/P1_G08_0004.jpg";
 	
 	cnn test_RGB = cnn();
 	cnn test_Depth = cnn();
